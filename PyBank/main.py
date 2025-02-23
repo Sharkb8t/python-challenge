@@ -3,8 +3,11 @@ import csv
 import os
 
 # Files to load and output (update with correct file paths)
-file_to_load = os.path.join("Resources", "budget_data.csv")  # Input file path
-file_to_output = os.path.join("analysis", "budget_analysis.txt")  # Output file path
+file_to_input = os.path.join(os.path.dirname(__file__), "Resources", "budget_data.csv")  # Input file path 
+file_to_output = os.path.join(os.path.dirname(__file__), "analysis", "budget_analysis.txt")  # Output file path
+
+# Ensure the output directory exists
+os.makedirs(os.path.dirname(file_to_output), exist_ok=True)
 
 # Define variables to track the financial data
 total_months = 0
@@ -13,8 +16,8 @@ net_changes = []
 dates = []
 
 # Open and read the csv
-with open(file_to_load) as financial_data:
-    reader = csv.reader(financial_data)
+with open(file_to_input, "r", encoding="utf-8") as budget_data:
+    reader = csv.reader(budget_data)
     
     # Skip the header row
     header = next(reader)
