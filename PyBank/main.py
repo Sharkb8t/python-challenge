@@ -1,47 +1,69 @@
+# Dependencies
 import csv
 import os
-import pandas as pd
 
-# Load the dataset
-file_path = "PyBank\Resources\budget_data.csv"
-df = pd.read_csv(file_path)
+# Files to load and output (update with correct file paths)
+file_to_load = os.path.join("Resources", "budget_data.csv")  # Input file path
+file_to_output = os.path.join("analysis", "budget_analysis.txt")  # Output file path
 
-# Display the first few rows to understand the structure
-df.head()
+# Define variables to track the financial data
+total_months = 0
+total_net = 0
+net_changes = []
+dates = []
 
-# Calculate the total number of months
-total_months = df.shape[0]
+# Open and read the csv
+with open(file_to_load) as financial_data:
+    reader = csv.reader(financial_data)
+    
+    # Skip the header row
+    header = next(reader)
+    
+    # Extract first row to initialize tracking
+    first_row = next(reader)
+    total_months += 1
+    total_net += int(first_row[1])
+    previous_net = int(first_row[1])
+    
+    # Process each row of data
+    for row in reader:
+        # Track the total months and net amount
+        total_months += 1
+        total_net += int(row[1])
+        
+        # Calculate net change and store it
+        net_change = int(row[1]) - previous_net
+        net_changes.append(net_change)
+        dates.append(row[0])
+        previous_net = int(row[1])
+    
+# Calculate the average net change
+average_change = sum(net_changes) / len(net_changes) if net_changes else 0
 
-# Calculate the net total amount of "Profit/Losses"
-net_total = df["Profit/Losses"].sum()
+# Find greatest increase and decrease
+if net_changes:
+    greatest_increase = max(net_changes)
+    greatest_decrease = min(net_changes)
+    greatest_increase_date = dates[net_changes.index(greatest_increase)]
+    greatest_decrease_date = dates[net_changes.index(greatest_decrease)]
+else:
+    greatest_increase = greatest_decrease = 0
+    greatest_increase_date = greatest_decrease_date = "N/A"
 
-# Calculate the changes in "Profit/Losses" over the entire period
-df["Change"] = df["Profit/Losses"].diff()
-
-# Calculate the average change (excluding the first NaN value)
-average_change = df["Change"].mean()
-
-# Find the greatest increase in profits (maximum change)
-greatest_increase = df.loc[df["Change"].idxmax(), ["Date", "Change"]]
-
-# Find the greatest decrease in profits (minimum change)
-greatest_decrease = df.loc[df["Change"].idxmin(), ["Date", "Change"]]
-
-# Prepare the results
-financial_analysis = f"""\
+# Generate the output summary
+output = f"""
 Financial Analysis
 ----------------------------
 Total Months: {total_months}
-Total: ${net_total}
+Total: ${total_net}
 Average Change: ${average_change:.2f}
-Greatest Increase in Profits: {greatest_increase['Date']} (${int(greatest_increase['Change'])})
-Greatest Decrease in Profits: {greatest_decrease['Date']} (${int(greatest_decrease['Change'])})
+Greatest Increase in Profits: {greatest_increase_date} (${greatest_increase})
+Greatest Decrease in Profits: {greatest_decrease_date} (${greatest_decrease})
 """
 
-# Print the results
-print(financial_analysis)
+# Print the output
+print(output)
 
-# Save the output to a text file
-output_path = "PyBank\analysis\financial_analysis.txt"
-with open(output_path, "w") as file:
-    file.write(financial_analysis)
+# Write the results to a text file
+with open(file_to_output, "w") as txt_file:
+    txt_file.write(output)
